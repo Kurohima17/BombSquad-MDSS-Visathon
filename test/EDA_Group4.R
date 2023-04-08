@@ -12,9 +12,6 @@ library(tidyverse)
 # bookings
 # substitutions
 
-# squads - players who start a game on the bench but not substituted in
-# will appear here but not in player_appearances
-
 # glimpse overview
 glimpse(goals)
 glimpse(penalty_kicks)
