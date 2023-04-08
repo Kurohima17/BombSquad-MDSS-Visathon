@@ -52,7 +52,7 @@ goals %>%
   xlab("Team") +
   ylab("No. of goals across the years")
 
-# Earlier but on world map
+# Earlier but on world map and not limited to 10 teams
 world_map <- map_data("world")
 
 countries = world_map %>% 
