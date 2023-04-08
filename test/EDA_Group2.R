@@ -5,7 +5,7 @@
 library(worldcup)
 library(tidyverse)
 
-# Explore the first group of worldcup dataset including:
+# Explore the second group of worldcup dataset including:
 
 # qualified_teams
 # squads
