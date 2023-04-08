@@ -1,9 +1,11 @@
 # install.packages("devtools")
 # install.packages("tidyverse")
+# install.packages("ggthemes")
 # devtools::install_github("jfjelstul/worldcup")
 
 library(worldcup)
 library(tidyverse)
+library(ggthemes)
 
 # Explore the fourth group of worldcup dataset including:
 
@@ -33,4 +35,42 @@ goals %>%
   labs(
     title = "Number of goals scored by home vs visitor teams",
     subtitle = "Data shows home team scored more goals than visitors"
+  )
+
+# Teams that scored the most goals
+goals %>%
+  group_by(team_code) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice_head(n=10) %>%
+
+  ggplot(aes(x=reorder(team_code, -count),y=count,fill=team_code)) +
+  geom_bar(stat="identity") +
+  labs(
+    title = "Top 10 teams with highest number of goals"
+  ) +
+  xlab("Team") +
+  ylab("No. of goals across the years")
+
+# Earlier but on world map
+world_map <- map_data("world")
+
+countries = world_map %>% 
+  distinct(region) %>% 
+  rowid_to_column() %>%
+  rename(team_name = region)
+
+goals %>%
+  group_by(team_name) %>%
+  summarise(count = n()) %>%
+  right_join(countries, by = "team_name") %>%
+  
+  ggplot(aes(fill=count, map_id=team_name)) +
+  geom_map(map = world_map) +
+  expand_limits(x = world_map$long, y = world_map$lat) +
+  coord_map("moll") +
+  theme_map() +
+  labs(
+    title = "Number of goals scored by country",
+    subtitle = "South America and Europe are the highest scorers"
   )
