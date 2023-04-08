@@ -21,3 +21,28 @@ glimpse(player_appearances)
 glimpse(manager_appearances)
 glimpse(referee_appearances)
 glimpse(squads)
+
+head(player_appearances)
+head(squads)
+
+# Exploring fully benched players
+benched <- anti_join(squads, player_appearances, by="player_id")
+dim(benched)
+head(benched)
+
+# Top 10 teams that leave players on the bench the most
+# Remove the slice and this plot could be used on Marzuk's world map
+benched %>%
+  group_by(team_code) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice_head(n=10) %>%
+  ggplot(aes(x=reorder(team_code, -count),y=count, fill=team_code)) +
+  geom_bar(stat="identity") +
+  labs(
+    title = "Top 10 teams that leave the most number of players on benches"
+  ) +
+  xlab("Team") +
+  ylab("No. of players benched across the years")
+
+
