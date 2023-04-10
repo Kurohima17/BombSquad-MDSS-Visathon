@@ -87,5 +87,23 @@ player_goals <- goals %>%
 
 summary(player_goals)
 
+player_goals
+
 player_goals %>%
   filter(goal_keeper == 1)
+
+# Managers with most goals
+goals %>%
+  select(match_id) %>%
+  left_join(manager_appearances %>%
+              select(match_id, manager_id)
+              , by = "match_id") %>%
+  group_by(manager_id) %>%
+  count() %>%
+  arrange(desc(n)) %>%
+  left_join(
+    managers %>%
+      select(manager_id, family_name, given_name, country_name),
+    by = "manager_id"
+  ) %>%
+  head(n=20)
