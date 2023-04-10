@@ -74,3 +74,18 @@ goals %>%
     title = "Number of goals scored by country",
     subtitle = "South America and Europe are the highest scorers"
   )
+
+# Players with most goals
+player_goals <- goals %>% 
+  group_by(player_id) %>%
+  count() %>%
+  arrange(desc(n)) %>%
+  rename(goals = n) %>%
+  left_join(players %>%
+              select(player_id, family_name, given_name, goal_keeper, defender, midfielder, forward)
+            , by = "player_id")
+
+summary(player_goals)
+
+player_goals %>%
+  filter(goal_keeper == 1)
