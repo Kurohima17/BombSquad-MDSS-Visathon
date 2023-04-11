@@ -75,6 +75,7 @@ goals %>%
     subtitle = "South America and Europe are the highest scorers"
   )
 
+# @Marzuk - use block of player_goals for the bubble plot
 # Players with most goals
 player_goals <- goals %>% 
   group_by(player_id) %>%
@@ -86,8 +87,6 @@ player_goals <- goals %>%
             , by = "player_id")
 
 summary(player_goals)
-
-player_goals
 
 player_goals %>%
   filter(goal_keeper == 1)
