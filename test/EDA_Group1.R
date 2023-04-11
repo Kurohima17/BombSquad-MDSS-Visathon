@@ -17,9 +17,6 @@ library(tidyverse)
 # matches
 # awards
 
-teams %>%
-  filter(team_code == "ARG")
-
 # glimpse overview
 glimpse(tournaments)
 glimpse(confederations)
