@@ -45,4 +45,27 @@ benched %>%
   xlab("Team") +
   ylab("No. of players benched across the years")
 
+# Visualising composition of the starting 11 of each team
+# make interactive by allowing filter for tournament_id and/or team_id
+
+starting_eleven <- player_appearances %>%
+  filter(starter == 1) %>%
+  group_by(team_id, team_code, match_id, position_code) %>%
+  count() %>%
+  unite("team_match" ,team_code:match_id)
+
+starting_eleven %>%
+  ggplot(aes(x=team_match, y=n, fill=position_code)) +
+  geom_bar(position="stack", stat="identity") +
+  coord_polar(start = 0) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  ) +
+  labs(
+    title = "Visualisation of the starting-eleven for every FIFA match since 1970"
+  )
 
