@@ -77,32 +77,57 @@ goals %>%
 
 # @Marzuk - use block of player_goals for the bubble plot
 # Players with most goals
-player_goals <- goals %>% 
+# 3 var - goals, count_matches, count_tournaments
+player_goals <- goals %>%
+  select(player_id, team_name) %>%
   group_by(player_id) %>%
   count() %>%
   arrange(desc(n)) %>%
   rename(goals = n) %>%
-  left_join(players %>%
-              select(player_id, family_name, given_name, goal_keeper, defender, midfielder, forward)
-            , by = "player_id")
+  # Drop players with no goals scored
+  subset(goals != "") %>%
+  # Join with player_appearances for count_matches
+  right_join(
+    player_appearances %>%
+      group_by(player_id) %>%
+      count() %>%
+      rename(count_matches = n)
+    , by = "player_id"
+    ) %>%
+  # Join with players for players details and count_tournaments
+  left_join(
+    players %>%
+      select(player_id, count_tournaments, family_name, given_name, goal_keeper, defender, midfielder, forward)
+    , by = "player_id"
+    )
 
-summary(player_goals)
-
+# Plot the bubble plot
 player_goals %>%
-  filter(goal_keeper == 1)
+  mutate_at('forward', as.character()) %>%
+  ggplot(aes(
+    x=count_matches,
+    y=count_tournaments,
+    size=goals,
+    color=forward
+  )) +
+  geom_point(alpha = 0.3) +
+  scale_size(range = c(.1, 25))
 
 # Managers with most goals
-goals %>%
+manager_goals <- goals %>%
   select(match_id) %>%
   left_join(manager_appearances %>%
-              select(match_id, manager_id)
-              , by = "match_id") %>%
+              select(match_id, manager_id),
+            by = "match_id",
+            relationship = "many-to-many") %>%
   group_by(manager_id) %>%
   count() %>%
+  rename(goals = n) %>%
   arrange(desc(n)) %>%
   left_join(
     managers %>%
       select(manager_id, family_name, given_name, country_name),
     by = "manager_id"
-  ) %>%
-  head(n=20)
+  )
+
+summary(manager_goals)
