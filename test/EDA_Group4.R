@@ -103,15 +103,24 @@ player_goals <- goals %>%
 
 # Plot the bubble plot
 player_goals %>%
-  mutate_at('forward', as.character()) %>%
+  mutate(is_forward = if_else(
+    forward == 1, 'yes', 'no'
+  )) %>%
   ggplot(aes(
     x=count_matches,
     y=count_tournaments,
     size=goals,
-    color=forward
+    color=is_forward
   )) +
   geom_point(alpha = 0.3) +
-  scale_size(range = c(.1, 25))
+  scale_size(range = c(.1, 25)) +
+  labs(
+    title = "The better the player, the more matches and tournaments they appear in",
+    subtitle = "Larger circle means more goals scored. \nHue is green if player plays forward at least once",
+    caption = "Worldcup dataset - created by Bomb Squad for MDSS Visathon 2023",
+    x = "No. of matches played",
+    y = "No. of tournaments played"
+  )
 
 # Managers with most goals
 manager_goals <- goals %>%
