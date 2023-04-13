@@ -7,33 +7,13 @@ library(tidyverse)
 
 glimpse(squads)
 glimpse(player_appearances)
+glimpse(manager_appointments)
+glimpse(manager_appearances)
 glimpse(goals)
 
 # Store team composition of each match using player_id, team_id, and match_id
+
 df <- player_appearances %>%
-  filter(starter == 1) %>%
-  select('team_id','match_id', 'player_id','position_code') %>%
-  group_by(team_id, match_id) %>%
-  summarise("players" = toString(player_id), .groups = "keep") %>%
-  # Create unique team key from team and match id
-  # unite("key", c("team_id",'match_id'), sep="-", remove=FALSE) %>%
-  ungroup()
-
-# Find out how many goals were scored by each team for each match
-n_goals <- goals %>% 
-  select('team_id','match_id') %>%
-  group_by(team_id, match_id) %>%
-  count() %>%
-  rename(goals = n)
-
-# Join n_goals with df to find how many goals are scored for each team composition
-df %>%
-  left_join(n_goals, by = c('team_id','match_id')) %>%
-  mutate_at("goals", ~replace_na(.,0)) %>%
-  # Drop team_id and match_id since we don't need them to train the model
-  select(players, goals)
-
-player_appearances %>%
   # Only filter for the starting eleven
   filter(starter == 1) %>%
   select('team_id','match_id', 'player_id','position_code') %>%
@@ -59,9 +39,30 @@ player_appearances %>%
     position_code == "SW" ~ "DF", # Sweeper
     .default = position_code
   )) %>%
-  group_by(team_id, match_id) %>%
-  spread(position_code2, player_id) %>%
-  # summarise("players" = toString(player_id), .groups = "keep") %>%
+  # Drop position code
+  select(-position_code) %>%
+  # select(-c(position_code, position_code2)) %>%
+  group_by(team_id, match_id, position_code2) %>%
+  summarise("players" = toString(player_id), .groups = "keep") %>%
+  spread(position_code2, players) %>%
   # Create unique team key from team and match id
   # unite("key", c("team_id",'match_id'), sep="-", remove=FALSE) %>%
-  ungroup()
+  ungroup() %>%
+  left_join(
+  manager_appearances %>%
+    select(match_id, team_id, manager_id, home_team, away_team),
+  by = c('team_id','match_id')
+  )
+
+
+# Find out how many goals were scored by each team for each match
+n_goals <- goals %>% 
+  select('team_id','match_id') %>%
+  group_by(team_id, match_id) %>%
+  count() %>%
+  rename(goals = n)
+
+# Join n_goals with df to find how many goals are scored for each team composition
+df %>%
+  left_join(n_goals, by = c('team_id','match_id')) %>%
+  mutate_at("goals", ~replace_na(.,0))
