@@ -1,4 +1,9 @@
+# install.packages("caret")
+install.packages("word2vec")
+
 library(worldcup)
+library(caret)
+library(word2vec)
 library(tidyverse)
 
 # Quick EDA review of utilised dataset
@@ -11,8 +16,14 @@ glimpse(manager_appointments)
 glimpse(manager_appearances)
 glimpse(goals)
 
-# Store team composition of each match using player_id, team_id, and match_id
+# Find out how many goals were scored by each team for each match
+n_goals <- goals %>% 
+  select('team_id','match_id') %>%
+  group_by(team_id, match_id) %>%
+  count() %>%
+  rename(goals = n)
 
+# Store team composition of each match using player_id, team_id, and match_id
 df <- player_appearances %>%
   # Only filter for the starting eleven
   filter(starter == 1) %>%
@@ -43,7 +54,7 @@ df <- player_appearances %>%
   select(-position_code) %>%
   # select(-c(position_code, position_code2)) %>%
   group_by(team_id, match_id, position_code2) %>%
-  summarise("players" = toString(player_id), .groups = "keep") %>%
+  summarise("players" = length(player_id), .groups = "keep") %>%
   spread(position_code2, players) %>%
   # Create unique team key from team and match id
   # unite("key", c("team_id",'match_id'), sep="-", remove=FALSE) %>%
@@ -52,17 +63,25 @@ df <- player_appearances %>%
   manager_appearances %>%
     select(match_id, team_id, manager_id, home_team, away_team),
   by = c('team_id','match_id')
-  )
-
-
-# Find out how many goals were scored by each team for each match
-n_goals <- goals %>% 
-  select('team_id','match_id') %>%
-  group_by(team_id, match_id) %>%
-  count() %>%
-  rename(goals = n)
-
-# Join n_goals with df to find how many goals are scored for each team composition
-df %>%
+  ) %>%
   left_join(n_goals, by = c('team_id','match_id')) %>%
-  mutate_at("goals", ~replace_na(.,0))
+  mutate_at("goals", ~replace_na(.,0)) %>%
+  select(-c('team_id','match_id'))
+
+glimpse(df)
+
+### Create model
+
+# train_test_split
+split <- createDataPartition(df$goals, times = 1, p = 0.7, list = FALSE)
+train_data <- df[split, ]
+test_data <- df[-split, ]
+
+# Concatenate all features into a single vector
+player_ids <- c(train_data$manager_id)
+
+# Concatenate all player IDs into a single string
+corpus <- paste(player_ids, collapse = " ")
+
+# Train corpus on training data
+wv_model <- word2vec(corpus, dim = 10, iter = 10)
